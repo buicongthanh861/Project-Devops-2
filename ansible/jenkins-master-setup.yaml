@@ -1,33 +1,64 @@
 ---
 - hosts: jenkins-master
-  become: true 
-  tasks: 
-  - name: add jenkins key 
-    apt_key: 
-      url:  https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
-      state: present 
+  become: true
+  tasks:
+    - name: Remove old Jenkins if exists
+      ansible.builtin.apt:
+        name: jenkins
+        state: absent
+        purge: yes
 
-  - name: add jenkins repo 
-    apt_repository: 
-      repo: 'deb https://pkg.jenkins.io/debian-stable binary/'
-      state: present 
+    - name: Remove old Jenkins repo list if exists
+      ansible.builtin.file:
+        path: /etc/apt/sources.list.d/jenkins.list
+        state: absent
 
-  - name: install java 
-    apt: 
-      name: openjdk-11-jre
-      state: present
+    - name: Add Jenkins GPG key (new method)
+      ansible.builtin.shell: |
+        curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | gpg --dearmor -o /usr/share/keyrings/jenkins-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/jenkins-keyring.gpg
 
-  - name: install jenkins 
-    apt: 
-      name: jenkins 
-      state: present 
+    - name: Add Jenkins repository (force jammy since noble not yet supported)
+      ansible.builtin.copy:
+        dest: /etc/apt/sources.list.d/jenkins.list
+        content: |
+          deb [signed-by=/usr/share/keyrings/jenkins-keyring.gpg] https://pkg.jenkins.io/debian-stable binary/
+        mode: '0644'
 
-  - name: start jenkins service 
-    service: 
-      name: jenkins 
-      state: started 
+    - name: Update apt cache with jammy codename
+      ansible.builtin.shell: |
+        sed -i 's/^VERSION_CODENAME=.*/VERSION_CODENAME=jammy/' /etc/os-release
+        apt-get update -y
 
-  - name: enable jenkins to start at boot time 
-    service: 
-      name: jenkins 
-      enabled: yes 
+    - name: Install Java (OpenJDK 17)
+      ansible.builtin.apt:
+        name: openjdk-17-jre
+        state: present
+
+    - name: Install Jenkins
+      ansible.builtin.apt:
+        name: jenkins
+        state: present
+
+    - name: Reload systemd to detect new Jenkins service
+      ansible.builtin.shell: systemctl daemon-reload
+
+    - name: Wait 5 seconds for Jenkins service registration
+      ansible.builtin.pause:
+        seconds: 5
+
+    - name: Ensure Jenkins service is started
+      ansible.builtin.service:
+        name: jenkins
+        state: started
+        enabled: yes
+
+    - name: Verify Jenkins war file exists
+      ansible.builtin.stat:
+        path: /usr/share/jenkins/jenkins.war
+      register: jenkins_war
+
+    - name: Debug Jenkins war status
+      ansible.builtin.debug:
+        var: jenkins_war.stat.exists

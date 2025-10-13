@@ -4,18 +4,20 @@ pipeline {
             label 'maven'
         }
     }
-environment {
-    PATH = "/opt/apache-maven-3.9.9/bin:$PATH"
-}
+    environment {
+        PATH = "/opt/apache-maven-3.9.9/bin:$PATH"
+    }
 
     stages {
         stage('build') {
             steps {
                 echo "--------build started------"
-                sh 'mvn clean deploy -DskipTests'
-                echo "--------unit  Complted-------"
+                // Dùng 'install' thay vì 'deploy' để giảm load cho Jenkins agent
+                sh 'mvn clean install -DskipTests'
+                echo "--------build completed-------"
             }
         }
+
         stage("test") {
             steps {
                 echo "------------running unit test--------"
@@ -23,33 +25,38 @@ environment {
             }
             post {
                 always {
+                    // Thu thập kết quả test để hiển thị trong Jenkins
                     junit '**/target/surefire-reports/*.xml'
                 }
             }    
         }
 
-    stage('SonarQube analysis') {
-    environment {
-      scannerHome = tool 'sonar-scanner'
-    }
-    steps{
-    withSonarQubeEnv('sonarqube-server') {
-      sh "${scannerHome}/bin/sonar-scanner"
+        stage('SonarQube analysis') {
+            environment {
+                // Khai báo tool SonarScanner đã cấu hình trong Jenkins
+                scannerHome = tool 'sonar-scanner'
+            }
+            steps{
+                withSonarQubeEnv('sonarqube-server') {
+                    // Chạy scan code SonarQube
+                    sh "${scannerHome}/bin/sonar-scanner"
+                }
+            }
+        }
+
+        stage("Quality Gate"){
+            steps {
+                script {
+                    // Giới hạn chờ Quality Gate tối đa 1 giờ
+                    timeout(time: 1, unit: 'HOURS') {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            // Dừng pipeline nếu Quality Gate fail
+                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                        }
+                    }
+                }
+            }
         }
     }
-    }
-    stage("Quality Gate"){
-        steps {
-            script {
-          timeout(time: 1, unit: 'HOURS') {
-              def qg = waitForQualityGate()
-              if (qg.status != 'OK') {
-                  error "Pipeline aborted due to quality gate failure: ${qg.status}"
-              }
-          }
-      }
-    }
-    }
 }
-}
-

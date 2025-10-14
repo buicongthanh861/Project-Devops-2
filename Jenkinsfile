@@ -12,23 +12,17 @@ pipeline {
         stage('build') {
             steps {
                 echo "--------build started------"
-                // Dùng 'install' thay vì 'deploy' để giảm load cho Jenkins agent
-                sh 'mvn clean install -DskipTests'
+                sh 'mvn clean deploy -Dmaven.test.skip=true'
                 echo "--------build completed-------"
             }
         }
 
-        stage("test") {
-            steps {
-                echo "------------running unit test--------"
-                sh 'mvn test'
+        stage("test"){
+            steps{
+                echo "----------- unit test started ----------"
+                sh 'mvn surefire-report:report'
+                 echo "----------- unit test Complted ----------"
             }
-            post {
-                always {
-                    // Thu thập kết quả test để hiển thị trong Jenkins
-                    junit '**/target/surefire-reports/*.xml'
-                }
-            }    
         }
 
         stage('SonarQube analysis') {

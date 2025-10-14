@@ -13,7 +13,7 @@ pipeline {
             steps {
                 echo "--------build started------"
                 // Dùng 'install' thay vì 'deploy' để giảm load cho Jenkins agent
-                sh 'mvn clean install -DskipTests'
+                sh 'mvn clean deploy -DskipTests'
                 echo "--------build completed-------"
             }
         }

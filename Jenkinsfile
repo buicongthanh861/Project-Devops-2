@@ -42,7 +42,7 @@ pipeline {
             steps {
                 script {
                     // Giới hạn chờ Quality Gate tối đa 1 giờ
-                    timeout(time: 1, unit: 'HOURS') {
+                    timeout(time: 10, unit: 'MINUTES') {
                         def qg = waitForQualityGate()
                         if (qg.status != 'OK') {
                             // Dừng pipeline nếu Quality Gate fail

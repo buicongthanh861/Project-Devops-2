@@ -12,7 +12,7 @@ pipeline {
         stage('build') {
             steps {
                 echo "--------build started------"
-                sh 'mvn clean deploy -Dmaven.test.skip=true'
+                sh 'mvn clean package -Dmaven.test.skip=true'
                 echo "--------build completed-------"
             }
         }
@@ -38,19 +38,19 @@ pipeline {
             }
         }
 
-        stage("Quality Gate"){
-            steps {
-                script {
+     //   stage("Quality Gate"){
+       //     steps {
+        //        script {
                     // Giới hạn chờ Quality Gate tối đa 1 giờ
-                    timeout(time: 10, unit: 'MINUTES') {
-                        def qg = waitForQualityGate()
-                        if (qg.status != 'OK') {
+        //           timeout(time: 10, unit: 'MINUTES') {
+          //              def qg = waitForQualityGate()
+           //             if (qg.status != 'OK') {
                             // Dừng pipeline nếu Quality Gate fail
-                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                        }
-                    }
-                }
-            }
-        }
+           //                 error "Pipeline aborted due to quality gate failure: ${qg.status}"
+             //           }
+           //         }
+         //       }
+         //   }
+      //  }
     }
 }

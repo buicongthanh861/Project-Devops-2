@@ -1,0 +1,55 @@
+---
+- hosts: jenkins-slave
+  become: true
+  tasks:
+    - name: Update Ubuntu repo and cache
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install Java (OpenJDK 17)
+      ansible.builtin.apt:
+        name: openjdk-17-jre
+        state: present
+
+    - name: Download Maven package
+      ansible.builtin.get_url:
+        url: https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
+        dest: /opt/apache-maven-3.9.9-bin.tar.gz
+        mode: '0644'
+
+    - name: Extract Maven package
+      ansible.builtin.unarchive:
+        src: /opt/apache-maven-3.9.9-bin.tar.gz
+        dest: /opt
+        remote_src: yes
+
+    - name: Create symlink for Maven
+      ansible.builtin.file:
+        src: /opt/apache-maven-3.9.9
+        dest: /opt/maven
+        state: link
+
+    - name: Set environment variables for Maven
+      ansible.builtin.copy:
+        dest: /etc/profile.d/maven.sh
+        content: |
+          export M2_HOME=/opt/maven
+          export PATH=$M2_HOME/bin:$PATH
+        mode: '0755'
+
+    - name: Update apt cache before installing Docker
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Install Docker (from Ubuntu repo)
+      ansible.builtin.apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+
+    - name: Enable and start Docker service
+      ansible.builtin.service:
+        name: docker
+        state: started
+        enabled: yes

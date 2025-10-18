@@ -90,8 +90,6 @@ stage("Jar Publish") {
     }
 }
 
-   def imageName = 'valaxy01.jfrog.io/valaxy-docker/ttrend'
-   def version   = '2.0.2'
     stage(" Docker Build ") {
       steps {
         script {

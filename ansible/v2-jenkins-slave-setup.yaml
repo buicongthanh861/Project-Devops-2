@@ -11,7 +11,6 @@
       ansible.builtin.apt:
         name: openjdk-17-jre
         state: present
-
     - name: Download Maven package
       ansible.builtin.get_url:
         url: https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz
@@ -52,4 +51,13 @@
       ansible.builtin.service:
         name: docker
         state: started
+        enabled: yes
+    - name: give 777 permissions on /var/run/docker.sock
+      file:
+        path: /var/run/docker.sock
+        state: file
+        mode: 0777
+    - name: start docker on boot time
+      service:
+        name: docker
         enabled: yes

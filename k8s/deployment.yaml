@@ -1,0 +1,23 @@
+kind: Deployment
+metadata:
+  name: congthanh-rtp
+  namespace: congthanh
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app:  congthanh-rtp
+  template:
+    metadata:
+      labels:
+        app:  congthanh-rtp
+    spec:
+      imagePullSecrets:
+      - name: jfrogcred
+      containers:
+      - name:  congthanh-rtp
+        image: trialuitjen.jfrog.io/congthanh-docker-local/ttrend:2.1.2
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+       

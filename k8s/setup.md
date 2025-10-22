@@ -10,4 +10,5 @@ kubectl version
 aws configure
 Provide access_key, secret_key
 aws eks update-kubeconfig --region ap-southeast-1 --name congthanh-eks
+docker login -u buicongthanh861@gmail.com -p ******** https://trialuitjen.jfrog.io
 

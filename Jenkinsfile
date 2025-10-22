@@ -112,13 +112,13 @@ stage("Jar Publish") {
         }
     }
 
-    stage("Deploy"){
-        steps {
-            script{
-                sh './deploy.sh'
-            }
+   stage('Deploy') {
+    steps {
+        dir('/home/ubuntu/kubernets') {
+            sh './deploy.sh'
         }
     }
+}
 
 
     }

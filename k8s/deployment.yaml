@@ -17,7 +17,7 @@ spec:
       - name: jfrogcred
       containers:
       - name:  congthanh-rtp
-        image: trialuitjen.jfrog.io/congthanh-docker-local/ttrend:2.1.2
+        image: trialuitjen.jfrog.io/congthanh-docker-local/ttrend:2.1.3
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
